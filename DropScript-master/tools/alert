@@ -1,0 +1,68 @@
+#!/bin/sh
+
+##
+# Show an alert panel
+#
+# Wilfredo Sanchez | wsanchez@wsanchez.net
+# Copyright (c) 2007 Wilfredo Sanchez Vega.
+# All rights reserved.
+#
+# Permission to use, copy, modify, and distribute this software for
+# any purpose with or without fee is hereby granted, provided that the
+# above copyright notice and this permission notice appear in all
+# copies.
+#
+# THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHORS DISCLAIM ALL
+# WARRANTIES WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE
+# AUTHORS BE LIABLE FOR ANY SPECIAL, DIRECT, INDIRECT, OR
+# CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS
+# OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT,
+# NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION
+# WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+##
+
+##
+# Handle command line
+##
+
+usage ()
+{
+  program=$(basename "$0");
+
+  if [ $# != 0 ]; then echo "$@"; echo ""; fi;
+
+  echo "${program}: usage:";
+  echo "    ${program} message";
+}
+
+# Combine all arguments into one string
+message="$*";
+
+##
+# Functions
+##
+
+script () {
+  osascript | while read status; do
+    status="${status#button returned:}";
+    if [ "${status}" == "OK" ]; then
+      return 0;
+    else
+      return 1;
+    fi;
+  done;
+}
+
+##
+# Do the Right Thing
+##
+
+script <<EOF
+  tell application "System Events"
+    set _app to name of first process whose frontmost is true
+  end tell
+  tell application _app
+    display alert "${message}"
+  end tell
+EOF

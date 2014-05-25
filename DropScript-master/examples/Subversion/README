@@ -1,0 +1,45 @@
+  These scripts performs various operations on Subversion working copies
+and repositories.  Subversion is a revision control system.  See the
+Subversion documentation at http://subversion.tigris.org/ for more
+information.
+
+Implementation Notes
+--------------------
+
+* CVS Scripts
+
+  Be sure to keep the files in the cvs-support folder in sync with
+files in this folder.  They are identical except for the specific logic
+related to CVS vs. Subversion.  If you make a fix here, do the same
+there.
+
+* User interaction
+
+  Scripts that require user input utilize the terminal script which is
+in the DropScript application bundle and prompting the user at the
+terminal command line.
+
+* (Non-)Batching
+
+ Some scripts process targets independently, even though the Subversion
+operations they perform allow several items to be processed in a single
+svn invocation.
+
+  This is generally because svn will exit with an error if it cannot
+complete the desired operation on any of the files passed to it, and we
+prefer (for the operation in question) that all files that can be
+processed are processed, and those that cannot are effectively ignored.
+
+  For example, if the user selects several files in a working copy and
+invokes the SVNChanges script on them, we don't want to abort the entire
+batch because some of the files are not under revision control.
+
+  For scripts that generate text output to be shown with TextEdit (eg.
+SVNDiff), this is also useful because each target gets it's own output
+view, allowing users to get separate diffs if they select files, or a
+collection of diffs if they select directories.
+
+  Note that for safety, we do batch for operations that modify the
+repository or working copy, on the theory that if the user isn't doing
+the right thing, aborting due to a mistake is better than doing the
+wrong thing.

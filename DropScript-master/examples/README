@@ -1,0 +1,122 @@
+  These examples scripts are intended to provide some guidance for
+users of DropScript who are writing scripts to create new drop
+applications.
+
+  Any of the scripts in this folder can be dropped onto the DropScript
+application icon to create a new Mac OS application that performs the
+functionality provided by the scripts.  The scripts are:
+
+ GZip.sh - compress a file using the GNU gzip utility with maximal
+           compression.  The compressed file will be renamed with a
+           ".gz" suffix denoting the compression format.  The original
+           file is removed.  See the gzip(1) man page for more
+           information.
+
+ GUnzip.sh - uncompress a file previously compressed using gzip.  The
+             ".gz" suffix is removed from the expanded file.  The
+             compressed file is removed.
+
+ Shove.sh - store a set of files in a gzip compressed tar format
+            archive.  See the tar(1) man page for more information.
+
+ UnShove.sh - unpack the contents of a various archive formats:
+                - (optionally gzip compressed) tar format file
+                  archives [*.tar, *.tar.gz, *.tgz]
+                - gzip compressed files [*.gz]
+                - Unix compressed files [*.Z]
+                - ZIP file archives [*.zip]
+
+
+Basic Scripts
+-------------
+
+ Gzip.sh and GUnzip.sh are very minimal examples.  They have no
+significant logic (they merely invoke a command with the same
+arguments passed to the script), and demonstrate that scripts used by
+DropScript can be quite simple wrappers around commands that accept
+file names as arguments.
+
+  Note that the scripts pass the arguments using the "$@" Bourne shell
+variable.  "$@" expands to each argument passed to the script and does
+no special shell processing of the arguments.  The similar "$*"
+variable will work for most files, but will expand files with spaces
+in them into two files.  The double quotes around "$@" are required to
+ensure this behavior.  See the sh(1) man page for more information.
+
+  Note also that one can, in fact, merely drop these commands
+(eg. /usr/bin/gzip) directly on DropScript, rather that writing a
+shell script that wraps the commands.  However, the drawbacks to doing
+so include: 1) you can't pass along extra arguments to the command
+(eg. GZip.sh adds the -9 flag for maximum compression); 2) the
+commands may change in newer versions of Mac OS, and you will still be
+using the old one, which gets copied into the drop application, rather
+than refering to whatever the currently installed version is (this may
+actually be a benefit, especially for programs that are not part of
+the standard system install); 3) scripts are smaller, and copying the
+command into your drop application will make the application larger;
+4) the system keeps program data in memory in order to optimize
+performance for the user, by making a copy, you may cause the system
+to store two copies of the same data in memory; etc.
+
+
+Script Options
+--------------
+
+  Shove.sh and UnShove.sh are more complicated examples.  Each handles
+arguments to the script independently using a for loop and uses some
+custom logic to get the job done.
+
+  Additionally, they utilize DropScript's ability to customize the new
+drop applications created by these scripts by specifying certain
+options in the script:
+
+  By default, new drop applications accept any type of file as input.
+You can specify the accepted file types for a new application by
+listing the file extensions or Mac OS file type for each type of
+accepted file in the EXTENSIONS and OSTYPES options.
+
+  Similarly, the new applications role (Editor, Viewer, or None)
+defaults to Editor unless specified in the ROLE option.
+
+  Script options are specified within shell script in the following
+format:
+
+        # <option> : <values> # comments
+
+  The first '#' character must be at the beginning of the line, and
+the second '#' and comment are optional.  There may be any number of
+space characters between the tokens in the line.  Tab characters are
+also allowed after the values.  The format of the values depends on
+the option being specified.  Supported options include:
+
+    Option       Value format
+    ------------ ------------------------
+    EXTENSIONS   "<ext1>" [... "<extN>"]
+    OSTYPES      "<type1> [... "<typeN>"]
+    ROLE         Editor | Viewer | None
+
+
+Application Services
+--------------------
+
+  New drop applications export their functionality via Mac OS
+application services, which adds items under the Services menu of
+applications (such as Finder) which know how to send references to
+files via the Mac OS application services.
+
+  Presently, DropScript applications only accept files as input via
+application services.
+
+  The menu item for the drop application is the name of the script
+(minus the file extension, eg. ".sh") under the DropScript submenu.
+You can specify the menu item name using the SERVICEMENU option in the
+script.  The format of the SERVICEMENU option is:
+
+    Option       Value format
+    ------------ ---------------------------
+    SERVICEMENU  <menu name> | "<menu name>"
+
+  Note the menu name may be put inside of double quotes.  A '/'
+character in the name means to make a submenu.  For example
+"Shove/Make Archive" would mean to create an item "Make Archive" in a
+submenu of the "Shove" item in the Services menu.

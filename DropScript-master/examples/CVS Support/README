@@ -1,0 +1,11 @@
+Please see the README file in the Subversion folder.
+
+These scripts are siblings to scripts in that folder.
+
+The following scripts are untested:
+
+CVSAdd
+CVSChanges
+CVSCheckout
+CVSCommit
+CVSDiff
