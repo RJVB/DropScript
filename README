@@ -13,9 +13,10 @@ Modifications I made:
 
 - Launching a droplet by command-double-clicking its icon will open the embedded script in the default text editor.
 
+- If the source executable/alias has an icon set, it's copied to the droplet instead of keeping the DropScript icon.
+
 - I modified the Xcode project for building on 10.6 and higher; there's also an Xcode project for 10.9 and higher
 
-ToDo: set the icon based on the original file's icon (it it has one)
 
 Source:
 http://head-lights.blogspot.fr/2013/05/dropscript-for-mac-os-x-108-mountain.html

@@ -35,6 +35,32 @@ int PostMessageBox( const char *title, const char *message )
 	return 0;
 }
 
+int PostSelectionBox( const char *title, const char *message )
+{ NSAlert* alert = [NSAlert
+			alertWithMessageText:[NSString stringWithCString:title encoding:NSUTF8StringEncoding]
+			defaultButton:@"OK" alternateButton:@"New script" otherButton:@"Open existing"
+			informativeTextWithFormat:[NSString stringWithCString:message encoding:NSUTF8StringEncoding]
+		];
+	@synchronized([NSAlert class]){
+      int ret;
+        [alert setAlertStyle:NSInformationalAlertStyle];
+        ret = [alert runModal];
+        switch( ret ){
+            default:
+            case NSAlertDefaultReturn:
+                return 1;
+                break;
+            case NSAlertAlternateReturn:
+                return 2;
+                break;
+            case NSAlertOtherReturn:
+                return 3;
+                break;
+        }
+	}
+	return 0;
+}
+
 BOOL isAlias( NSString *thePath )
 { NSError *err;
   NSURL *theURL = [NSURL fileURLWithPath:thePath];
@@ -64,6 +90,16 @@ NSURL *resolveIfAlias( NSString *thePath )
         NSLog( @"%@ points to %@; using the destination", thePath, origURL );
     }
     return origURL;
+}
+
+BOOL updateDropletIcon( NSString *thePath )
+{ NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:thePath];
+    if( icon ){
+        NSString *appBndl = [NSString stringWithFormat:@"%@.app", thePath];
+        NSLog(@"Icon for %@: %@", thePath, icon );
+        return [[NSWorkspace sharedWorkspace] setIcon:icon forFile:appBndl options:0];
+    }
+    return NO;
 }
 
 @implementation ApplicationController
@@ -201,6 +237,7 @@ NSURL *resolveIfAlias( NSString *thePath )
                         PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
                     }
             }
+            updateDropletIcon(thePath);
             [NSApp terminate: self];
         }
         else{
@@ -268,6 +305,7 @@ NSURL *resolveIfAlias( NSString *thePath )
         err = nil;
         if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
             [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
+            updateDropletIcon(thePath);
             unlink([thePath fileSystemRepresentation]);
             return YES;
         }
@@ -293,7 +331,14 @@ NSURL *resolveIfAlias( NSString *thePath )
     if( myScriptFilename && !myAppWasLaunchedWithDocument ){
         // RJVB 20140520
         if( creatingDropScript ){
-            PostMessageBox( "DropScript", "Use the File menu either to create a New script or else to Open an existing executable" );
+            switch( PostSelectionBox( "DropScript", "Use the File menu either to create a New script or else to Open an existing executable" ) ){
+                case 2:
+                    [self doNew:self];
+                    break;
+                case 3:
+                    [self doOpen:self];
+                    break;
+            }
         }
         else{
           NSUInteger mods = [NSEvent modifierFlags];

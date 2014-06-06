@@ -57,12 +57,12 @@ i = 0
 if (os.path.exists(droplet_path)):
     # RJVB: rather than creating a new droplet with a number in its name,
     # move the current droplet to a numbered "previous copy".
-    copy_path = os.path.join(destination, base_name + "-prev.app")
-    while (os.path.exists(copy_path)):
+    prev_path = os.path.join(destination, base_name + "-prev.app")
+    while (os.path.exists(prev_path)):
         i += 1
-        copy_name = base_name + "-prev-" + str(i)
-        copy_path = os.path.join(destination, droplet_name + ".app")
-    shutil.move(droplet_path, copy_path)
+        prev_name = base_name + "-prev-" + str(i)
+        prev_path = os.path.join(destination, droplet_name + ".app")
+    shutil.move(droplet_path, prev_path)
 
 ##
 # Functions
