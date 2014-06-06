@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>2813C0AF-2020-4C02-BB1E-B7DF2E2EAE6E</string>
+	<key>IDESourceControlProjectName</key>
+	<string>DropScript-109</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>2DCE3661-6585-485C-8FAA-5AC4CEBD28A4</key>
+		<string>http://github.com/RJVB/DropScript</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>DropScript-master/DropScript-109.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>2DCE3661-6585-485C-8FAA-5AC4CEBD28A4</key>
+		<string>../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>http://github.com/RJVB/DropScript</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>2DCE3661-6585-485C-8FAA-5AC4CEBD28A4</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>2DCE3661-6585-485C-8FAA-5AC4CEBD28A4</string>
+			<key>IDESourceControlWCCName</key>
+			<string>DropScript</string>
+		</dict>
+	</array>
+</dict>
+</plist>
