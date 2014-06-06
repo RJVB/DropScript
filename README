@@ -9,11 +9,13 @@ Modifications I made:
 
 - I added the possibility to launch the droplet without dropping any files onto it, in which case the script (or utility) is launched without arguments.
 
-- Launching the DropScript app itself without dropping a file onto it will offer to open a new file in the default text editor, allowing to create a new script from scratch
+- Launching the DropScript app itself without dropping a file onto it will open as a standard application. Use the Open menu item to select a script, binary executable or even a Finder alias to create a Droplet with. Use the New menu item to create and open a new file in the default text editor, allowing to create a script from scratch
 
 - Launching a droplet by command-double-clicking its icon will open the embedded script in the default text editor.
 
-- I modified the Xcode project for building on 10.6 and higher.
+- I modified the Xcode project for building on 10.6 and higher; there's also an Xcode project for 10.9 and higher
+
+ToDo: set the icon based on the original file's icon (it it has one)
 
 Source:
 http://head-lights.blogspot.fr/2013/05/dropscript-for-mac-os-x-108-mountain.html

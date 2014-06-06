@@ -54,11 +54,15 @@ droplet_script     = os.path.join(droplet_resources, "drop_script")
 droplet_plist      = os.path.join(droplet_contents, "Info.plist")
 
 i = 0
-while (os.path.exists(droplet_path)):
-    i += 1
-    #droplet_name = "Drop" + base_name + "-" + str(i)
-    droplet_name = base_name + "-" + str(i)
-    droplet_path = os.path.join(destination, droplet_name + ".app")
+if (os.path.exists(droplet_path)):
+    # RJVB: rather than creating a new droplet with a number in its name,
+    # move the current droplet to a numbered "previous copy".
+    copy_path = os.path.join(destination, base_name + "-prev.app")
+    while (os.path.exists(copy_path)):
+        i += 1
+        copy_name = base_name + "-prev-" + str(i)
+        copy_path = os.path.join(destination, droplet_name + ".app")
+    shutil.move(droplet_path, copy_path)
 
 ##
 # Functions

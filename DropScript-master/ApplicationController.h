@@ -29,13 +29,16 @@
  * Actions
  **/
 
-- (void) runScriptWithArguments: (NSArray*) anArguments;
+- (BOOL) createDropScript;
+- (NSTask*) runScriptWithArguments: (NSArray*) theArguments;
 
 /**
  * IB Targets
  **/
 
-- (IBAction) open: (id) aSender;
+- (IBAction) doNew: (id) aSender;
+
+- (IBAction) doOpen: (id) aSender;
 
 - (void)handleURIEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent;
 

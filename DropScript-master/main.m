@@ -8,7 +8,7 @@
 
 #import <AppKit/NSApplication.h>
 
-int main(int anArgumentCount, const char *anArguments[])
+int main(int anArgumentCount, const char *theArguments[])
 {
-    return NSApplicationMain(anArgumentCount, anArguments);
+    return NSApplicationMain(anArgumentCount, theArguments);
 }

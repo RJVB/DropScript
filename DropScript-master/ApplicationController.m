@@ -11,6 +11,61 @@
 
 #import "ApplicationController.h"
 
+int PostMessageBox( const char *title, const char *message )
+{ NSAlert* alert = [[[NSAlert alloc] init] autorelease];
+    NSString *msg, *tit;
+	@synchronized([NSAlert class]){
+		[alert setAlertStyle:NSInformationalAlertStyle];
+		[alert setMessageText:@"" ];
+		if( !(msg = [NSString stringWithCString:message encoding:NSUTF8StringEncoding]) ){
+			msg = [NSString stringWithCString:message encoding:NSASCIIStringEncoding];
+		}
+		if( !(tit = [NSString stringWithCString:title encoding:NSUTF8StringEncoding]) ){
+			tit = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
+		}
+		if( msg ){
+			[alert setInformativeText:msg];
+		}
+		else{
+			NSLog( @"msg=%@ tit=%@", msg, tit );
+		}
+		[[alert window] setTitle:tit];
+		return NSAlertDefaultReturn == [alert runModal];
+	}
+	return 0;
+}
+
+BOOL isAlias( NSString *thePath )
+{ NSError *err;
+  NSURL *theURL = [NSURL fileURLWithPath:thePath];
+  NSNumber *val = nil;
+    if( [theURL getResourceValue:&val forKey:NSURLIsAliasFileKey error:&err] ){
+        return( [val boolValue] );
+    }
+    else{
+        return NO;
+    }
+}
+
+NSURL *resolveIfAlias( NSString *thePath )
+{ NSError *err;
+  NSURL *theURL = [NSURL fileURLWithPath:thePath];
+  BOOL isStale = NO;
+  NSURL *origURL = nil;
+    if( isAlias(thePath) ){
+        NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:theURL error:nil];
+        err = nil;
+        origURL = [NSURL URLByResolvingBookmarkData:bookmark
+                                            options:0
+                                            relativeToURL:nil
+                                            bookmarkDataIsStale:&isStale
+                                            error:&err];
+        NSLog( @"alias resolution: isStale=%d, err=%@", isStale, err );
+        NSLog( @"%@ points to %@; using the destination", thePath, origURL );
+    }
+    return origURL;
+}
+
 @implementation ApplicationController
 
 /**
@@ -30,7 +85,7 @@
                 creatingDropScript = YES;
             }
             else{
-                NSRunAlertPanel(@"Error", @"Missing script.", @"Bummer", nil, nil);
+                NSRunAlertPanel(@"Error", @"Missing drop_script.py script.", @"Bummer", nil, nil);
                 [NSApp terminate: self];
             }
         }
@@ -62,58 +117,95 @@
  * Actions
  **/
 
-- (void) runScriptWithArguments: (NSArray*) anArguments
-{
-    if( anArguments == nil ){
-        // RJVB 20140520
-        NSTask *aTask = [[NSTask alloc] init];
-        [aTask setLaunchPath:myScriptFilename];
-        [aTask launch];
-    }
-    else{
-        [NSTask launchedTaskWithLaunchPath: myScriptFilename
-                                 arguments: anArguments];
-    }
-}
-
-- (void) runScriptWithArguments: (NSArray*) anArguments wait:(BOOL)wait
-{
-    if( anArguments == nil ){
-        // RJVB 20140520
-        NSTask *aTask = [[NSTask alloc] init];
-        [aTask setLaunchPath:myScriptFilename];
-        [aTask launch];
-        if( wait ){
-            [aTask waitUntilExit];
+- (NSTask*) runScriptWithArguments: (NSArray*) theArguments
+{ NSString *scriptFile = myScriptFilename;
+  BOOL isAppBundle = NO;
+  NSURL *origURL;
+    if( (origURL = resolveIfAlias(myScriptFilename)) ){
+        scriptFile = [origURL path];
+        if( [[origURL pathExtension] compare:@"app"] == NSOrderedSame ){
+            isAppBundle = YES;
         }
     }
-    else{
-        if( wait ){
-            [[NSTask launchedTaskWithLaunchPath: myScriptFilename
-                                     arguments: anArguments] waitUntilExit];
+    if( theArguments == nil ){
+        if( isAppBundle ){
+            [[NSWorkspace sharedWorkspace] launchApplication:scriptFile];
         }
         else{
-            [NSTask launchedTaskWithLaunchPath: myScriptFilename
-                                     arguments: anArguments];
+            // RJVB 20140520
+            NSTask *aTask = [[NSTask alloc] init];
+            [aTask setLaunchPath:scriptFile];
+            [aTask launch];
+            return aTask;
         }
     }
+    else{
+        if( isAppBundle ){
+            // not the most elegant solution, but there appears to be no single call to open
+            // a number of files with a given application. (There's one to open an array
+            // of NSURLs, but it takes a bundle identifier, not the path.)
+            for( NSString *arg in theArguments ){
+                [[NSWorkspace sharedWorkspace] openFile:arg withApplication:scriptFile];
+            }
+        }
+        else{
+            return [NSTask launchedTaskWithLaunchPath:scriptFile
+                                     arguments:theArguments];
+        }
+    }
+    // we return nil when launching an app bundle - for now. There's no reason
+    // to be able to wait for it anyway (= not a foreseen situation).
+    return nil;
+}
+
+- (void) runScriptWithArguments: (NSArray*) theArguments wait:(BOOL)wait
+{
+    [[self runScriptWithArguments:theArguments] waitUntilExit];
 }
 
 /**
  * IB Targets
  **/
 
-- (IBAction) open: (id) aSender
+- (IBAction) doNew: (id) aSender
+{
+    if( creatingDropScript ){
+        if( [self createDropScript] ){
+            [NSApp terminate: self];
+        }
+    }
+}
+
+- (IBAction) doOpen: (id) aSender
 {
     NSOpenPanel* anOpenPanel = [NSOpenPanel openPanel];
 
-    [anOpenPanel setCanChooseFiles         : YES];
-    [anOpenPanel setCanChooseDirectories   : YES];
-    [anOpenPanel setAllowsMultipleSelection: YES];
+    [anOpenPanel setCanChooseFiles: YES];
+    [anOpenPanel setCanChooseDirectories: NO];
+    [anOpenPanel setAllowsMultipleSelection: NO];
+    [anOpenPanel setResolvesAliases: NO];
 
-    if ([anOpenPanel runModal] == NSOKButton)
-    {
-        [self runScriptWithArguments: [anOpenPanel URLs]];
+    if( [anOpenPanel runModal] == NSFileHandlingPanelOKButton ){
+        NSString *thePath = [[anOpenPanel URL] path];
+        NSError *err = nil;
+        if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
+            [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
+            if( isAlias(thePath) ){
+                // we just received a Finder alias (bookmark). The python script that created our DropLet
+                // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
+                NSString *scriptFile = [NSString stringWithFormat:@"%@.app/Contents/Resources/drop_script", thePath];
+                    unlink([scriptFile fileSystemRepresentation]);
+                    if( ![[NSFileManager defaultManager] copyItemAtPath:thePath toPath:scriptFile error:&err] ){
+                        NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
+                                            thePath, scriptFile, err];
+                        PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
+                    }
+            }
+            [NSApp terminate: self];
+        }
+        else{
+            NSLog( @"File %@ is unreachable: %@", thePath, err );
+        }
     }
 }
 
@@ -149,9 +241,10 @@
 // RJVB 20140520
 - (BOOL) createDropScript
 { NSSavePanel *panel = [NSSavePanel savePanel];
+  NSArray *dtPaths = NSSearchPathForDirectoriesInDomains( NSDesktopDirectory, NSUserDomainMask, YES );
     [panel setMessage:@"Select a name and location for a new script file\nNB: this is a temporary file!\n(Select replace to choose an existing file)"];
     [panel setTitle:@"new file"];
-    [panel setDirectoryURL:[NSURL fileURLWithPath:@"/tmp" isDirectory:YES]];
+    [panel setDirectoryURL:[NSURL fileURLWithPath:[dtPaths objectAtIndex:0] isDirectory:YES]];
     if( [panel runModal] == NSFileHandlingPanelOKButton ){
         NSString *thePath = [[panel URL] path];
         NSError *err = nil;
@@ -172,7 +265,7 @@
         { NSString *command = [NSString stringWithFormat:@"open -tW \"%@\" ; chmod 755 \"%@\"", thePath, thePath];
             system( [command fileSystemRepresentation] );
         }
-        [err autorelease]; err = nil;
+        err = nil;
         if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
             [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
             unlink([thePath fileSystemRepresentation]);
@@ -200,7 +293,7 @@
     if( myScriptFilename && !myAppWasLaunchedWithDocument ){
         // RJVB 20140520
         if( creatingDropScript ){
-            [self createDropScript];
+            PostMessageBox( "DropScript", "Use the File menu either to create a New script or else to Open an existing executable" );
         }
         else{
           NSUInteger mods = [NSEvent modifierFlags];
@@ -210,8 +303,8 @@
             else{
                 [self runScriptWithArguments:nil];
             }
+            [NSApp terminate: self];
         }
-        [NSApp terminate: self];
     }
 }
 
