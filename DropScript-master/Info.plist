@@ -32,9 +32,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
-	<string>????</string>
+	<string>RJVB</string>
 	<key>CFBundleVersion</key>
-	<string>1.0-dev</string>
+	<string>1.1-dev</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
 	<key>NSMainNibFile</key>
