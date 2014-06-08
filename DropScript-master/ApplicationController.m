@@ -10,6 +10,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "ApplicationController.h"
+#include <unistd.h>
 
 int PostMessageBox( const char *title, const char *message )
 { NSAlert* alert = [[[NSAlert alloc] init] autorelease];
@@ -92,10 +93,12 @@ NSURL *resolveIfAlias( NSString *thePath )
     return origURL;
 }
 
-BOOL updateDropletIcon( NSString *thePath )
+BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 { NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:thePath];
     if( icon ){
-        NSString *appBndl = [NSString stringWithFormat:@"%@.app", thePath];
+        if( !appBndl ){
+            appBndl = [NSString stringWithFormat:@"%@.app", thePath];
+        }
         NSLog(@"Icon for %@: %@", thePath, icon );
         return [[NSWorkspace sharedWorkspace] setIcon:icon forFile:appBndl options:0];
     }
@@ -194,9 +197,14 @@ BOOL updateDropletIcon( NSString *thePath )
     return nil;
 }
 
-- (void) runScriptWithArguments: (NSArray*) theArguments wait:(BOOL)wait
-{
-    [[self runScriptWithArguments:theArguments] waitUntilExit];
+- (int) runScriptWithArguments: (NSArray*) theArguments wait:(BOOL)wait
+{ NSTask *script = [self runScriptWithArguments:theArguments];
+  int ret = 0;
+    if( wait ){
+        [script waitUntilExit];
+        ret = [script terminationStatus];
+    }
+    return ret;
 }
 
 /**
@@ -222,22 +230,40 @@ BOOL updateDropletIcon( NSString *thePath )
     [anOpenPanel setResolvesAliases: NO];
 
     if( [anOpenPanel runModal] == NSFileHandlingPanelOKButton ){
-        NSString *thePath = [[anOpenPanel URL] path];
+        NSString *thePath = [[anOpenPanel URL] path], *dirName = [thePath stringByDeletingLastPathComponent];
         NSError *err = nil;
+        int ret = 1;
         if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
-            [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
-            if( isAlias(thePath) ){
-                // we just received a Finder alias (bookmark). The python script that created our DropLet
-                // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
-                NSString *scriptFile = [NSString stringWithFormat:@"%@.app/Contents/Resources/drop_script", thePath];
-                    unlink([scriptFile fileSystemRepresentation]);
-                    if( ![[NSFileManager defaultManager] copyItemAtPath:thePath toPath:scriptFile error:&err] ){
-                        NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
-                                            thePath, scriptFile, err];
-                        PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
-                    }
+            if( access( [dirName fileSystemRepresentation], W_OK ) == 0 ){
+                // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+                ret = [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
             }
-            updateDropletIcon(thePath);
+            else{
+                NSOpenPanel *destPanel = [NSOpenPanel openPanel];
+                [destPanel setCanChooseFiles: NO];
+                [destPanel setCanChooseDirectories: YES];
+                [destPanel setMessage:@"Choose a destination to save the new DropLet"];
+                if( [destPanel runModal] == NSFileHandlingPanelOKButton ){
+                    dirName = [[destPanel URL] path];
+                    // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+                    ret = [self runScriptWithArguments:[NSArray arrayWithObjects:thePath, dirName, nil] wait:YES];
+                }
+            }
+            if( ret == 0 ){
+                if( isAlias(thePath) ){
+                    // we just received a Finder alias (bookmark). The python script that created our DropLet
+                    // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
+                    NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/drop_script",
+                                            dirName, [thePath lastPathComponent]];
+                        unlink([scriptFile fileSystemRepresentation]);
+                        if( ![[NSFileManager defaultManager] copyItemAtPath:thePath toPath:scriptFile error:&err] ){
+                            NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
+                                                thePath, scriptFile, err];
+                            PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
+                        }
+                }
+                updateDropletIcon( thePath, [NSString stringWithFormat:@"%@/%@.app", dirName, [thePath lastPathComponent]] );
+            }
             [NSApp terminate: self];
         }
         else{
@@ -305,7 +331,7 @@ BOOL updateDropletIcon( NSString *thePath )
         err = nil;
         if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
             [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
-            updateDropletIcon(thePath);
+            updateDropletIcon(thePath, nil);
             unlink([thePath fileSystemRepresentation]);
             return YES;
         }

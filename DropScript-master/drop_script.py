@@ -26,7 +26,7 @@ source_script = sys.argv[0]
 
 import Tkinter, tkMessageBox
 
-if len(sys.argv) != 2:
+if len(sys.argv) < 2 or len(sys.argv) > 3:
     try:
         import Tkinter, tkMessageBox
         top = Tkinter.Tk()
@@ -34,14 +34,17 @@ if len(sys.argv) != 2:
         B1.pack()
         tkMessageBox.showinfo( (os.path.basename(source_script)), "error: DropScript should be invoked by dropping a shell script onto us" )
     except:
-        print "%s takes exactly one argument" % (os.path.basename(source_script))
+        print "%s takes one or two arguments" % (os.path.basename(source_script))
     sys.exit(1)
 
 new_script  = sys.argv[1]
 
 source_app         = os.path.dirname(os.path.dirname(os.path.dirname(source_script)))
 source_name        = os.path.splitext(os.path.basename(source_app))[0]
-destination        = os.path.dirname(new_script)
+if len(sys.argv) == 3:
+    destination    = sys.argv[2]
+else:
+    destination    = os.path.dirname(new_script)
 base_name          = os.path.basename(os.path.splitext(new_script)[0])
 # droplet_name       = "Drop" + base_name
 droplet_name       = base_name
@@ -61,7 +64,7 @@ if (os.path.exists(droplet_path)):
     while (os.path.exists(prev_path)):
         i += 1
         prev_name = base_name + "-prev-" + str(i)
-        prev_path = os.path.join(destination, droplet_name + ".app")
+        prev_path = os.path.join(destination, prev_name + ".app")
     shutil.move(droplet_path, prev_path)
 
 ##
@@ -274,3 +277,4 @@ except Exception, e:
 
     # Show error panel on error
     pass
+    exit(1);
