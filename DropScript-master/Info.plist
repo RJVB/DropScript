@@ -34,7 +34,7 @@
 	<key>CFBundleSignature</key>
 	<string>RJVB</string>
 	<key>CFBundleVersion</key>
-	<string>1.1-dev</string>
+	<string>1.2</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.developer-tools</string>
 	<key>NSMainNibFile</key>

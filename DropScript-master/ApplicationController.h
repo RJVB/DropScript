@@ -30,6 +30,7 @@
  **/
 
 - (BOOL) createDropScript;
+- (BOOL) createDropScriptWithFile:(NSString*) thePath;
 - (NSTask*) runScriptWithArguments: (NSArray*) theArguments;
 
 /**

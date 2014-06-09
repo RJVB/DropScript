@@ -190,7 +190,7 @@ def write_plist(plist_filename, options):
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleSignature</key>
-    <string>????</string>
+    <string>DScr</string>
     <key>CFBundleVersion</key>
     <string>0.0</string>
     <key>NSMainNibFile</key>

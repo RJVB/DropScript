@@ -64,9 +64,8 @@ int PostSelectionBox( const char *title, const char *message )
 
 BOOL isAlias( NSString *thePath )
 { NSError *err;
-  NSURL *theURL = [NSURL fileURLWithPath:thePath];
   NSNumber *val = nil;
-    if( [theURL getResourceValue:&val forKey:NSURLIsAliasFileKey error:&err] ){
+    if( [[NSURL fileURLWithPath:thePath] getResourceValue:&val forKey:NSURLIsAliasFileKey error:&err] ){
         return( [val boolValue] );
     }
     else{
@@ -74,23 +73,49 @@ BOOL isAlias( NSString *thePath )
     }
 }
 
+BOOL createAliasFromTo( NSString *target, NSString *alias, NSError **err )
+{ BOOL ret = NO;
+  NSData *bookmarkData = [[NSURL fileURLWithPath:target] bookmarkDataWithOptions:NSURLBookmarkCreationSuitableForBookmarkFile
+                                                  includingResourceValuesForKeys:nil relativeToURL:nil error:err];
+    if( bookmarkData ){
+        err = NULL;
+        ret = [NSURL writeBookmarkData:bookmarkData toURL:[NSURL fileURLWithPath:alias]
+                         options:NSURLBookmarkCreationSuitableForBookmarkFile error:err];
+    }
+    return ret;
+}
+
 NSURL *resolveIfAlias( NSString *thePath )
 { NSError *err;
-  NSURL *theURL = [NSURL fileURLWithPath:thePath];
   BOOL isStale = NO;
   NSURL *origURL = nil;
     if( isAlias(thePath) ){
-        NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:theURL error:nil];
+        NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:[NSURL fileURLWithPath:thePath] error:nil];
         err = nil;
         origURL = [NSURL URLByResolvingBookmarkData:bookmark
                                             options:0
                                             relativeToURL:nil
                                             bookmarkDataIsStale:&isStale
                                             error:&err];
-        NSLog( @"alias resolution: isStale=%d, err=%@", isStale, err );
-        NSLog( @"%@ points to %@; using the destination", thePath, origURL );
+        if( isStale || err ){
+            NSLog( @"alias resolution: isStale=%d, err=%@", isStale, err );
+            NSLog( @"%@ points to %@; using the destination", thePath, origURL );
+        }
     }
     return origURL;
+}
+
+BOOL isAppBundle(NSString *thePath)
+{ NSBundle *bndl = [NSBundle bundleWithPath:thePath];
+  BOOL ret = NO;
+  NSDictionary *infoDct;
+    if( bndl && (infoDct = [bndl infoDictionary]) ){
+      id val = [infoDct objectForKey:@"CFBundlePackageType"];
+        if( [val isKindOfClass:[NSString class]] && [((NSString*)val) compare:@"APPL"] == NSOrderedSame ){
+            ret = YES;
+        }
+    }
+    return ret;
 }
 
 BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
@@ -158,16 +183,14 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 
 - (NSTask*) runScriptWithArguments: (NSArray*) theArguments
 { NSString *scriptFile = myScriptFilename;
-  BOOL isAppBundle = NO;
+  BOOL isAppBndle = NO;
   NSURL *origURL;
     if( (origURL = resolveIfAlias(myScriptFilename)) ){
         scriptFile = [origURL path];
-        if( [[origURL pathExtension] compare:@"app"] == NSOrderedSame ){
-            isAppBundle = YES;
-        }
     }
+    isAppBndle = isAppBundle(scriptFile);
     if( theArguments == nil ){
-        if( isAppBundle ){
+        if( isAppBndle ){
             [[NSWorkspace sharedWorkspace] launchApplication:scriptFile];
         }
         else{
@@ -179,7 +202,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
         }
     }
     else{
-        if( isAppBundle ){
+        if( isAppBndle ){
             // not the most elegant solution, but there appears to be no single call to open
             // a number of files with a given application. (There's one to open an array
             // of NSURLs, but it takes a bundle identifier, not the path.)
@@ -220,6 +243,97 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
     }
 }
 
+- (BOOL) createDropScriptWithFile:(NSString*) thePath
+{ NSString *dirName = [thePath stringByDeletingLastPathComponent], *alias = NULL;
+  NSError *err = nil;
+  int ret = 1;
+  BOOL success = NO;
+    if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
+        if( access( [dirName fileSystemRepresentation], W_OK ) == 0 ){
+            // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+            if( isAppBundle(thePath) ){
+                alias = [NSString stringWithFormat:@"%@-DropLet", [thePath stringByDeletingPathExtension]];
+                if( createAliasFromTo( thePath, alias, &err ) ){
+                    ret = [self runScriptWithArguments:[NSArray arrayWithObject:alias] wait:YES];
+                    thePath = alias;
+                }
+                else{
+                    NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
+                    PostMessageBox( "DropScript", "Source script is an AppBundle and cannot make an alias to it" );
+                }
+            }
+            else{
+                ret = [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
+            }
+        }
+        else{
+            NSOpenPanel *destPanel = [NSOpenPanel openPanel];
+            [destPanel setCanChooseFiles: NO];
+            [destPanel setCanChooseDirectories: YES];
+            [destPanel setMessage:@"Choose a destination to save the new DropLet"];
+            if( [destPanel runModal] == NSFileHandlingPanelOKButton ){
+                dirName = [[destPanel URL] path];
+                // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+                if( isAppBundle(thePath) ){
+                    alias = [NSString stringWithFormat:@"%@/%@", dirName,
+                             [[thePath stringByDeletingPathExtension] lastPathComponent]];
+                    if( createAliasFromTo( thePath, alias, &err ) ){
+                        // we can just call runScriptWithArguments with a single argument, as the droplet
+                        // is to be created in the same directory as the alias we just made.
+                        ret = [self runScriptWithArguments:[NSArray arrayWithObject:alias] wait:YES];
+                        thePath = alias;
+                    }
+                    else{
+                        NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
+                        PostMessageBox( "DropScript", "Source script is an AppBundle and cannot make an alias to it" );
+                    }
+                }
+                else{
+                    ret = [self runScriptWithArguments:[NSArray arrayWithObjects:thePath, dirName, nil] wait:YES];
+                }
+            }
+        }
+        if( ret == 0 ){
+            if( isAlias(thePath) ){
+                // we just received a Finder alias (bookmark). The python script that created our DropLet
+                // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
+                NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/drop_script",
+                                        dirName, [thePath lastPathComponent]];
+                BOOL ok;
+                    unlink([scriptFile fileSystemRepresentation]);
+                    if( alias ){
+                        ok = [[NSFileManager defaultManager] moveItemAtPath:thePath toPath:scriptFile error:&err];
+                        alias = nil;
+                    }
+                    else{
+                        ok = [[NSFileManager defaultManager] copyItemAtPath:thePath toPath:scriptFile error:&err];
+                    }
+                    if( !ok ){
+                        NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
+                                            thePath, scriptFile, err];
+                        PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
+                    }
+                    else{
+                        success = YES;
+                        updateDropletIcon( scriptFile, [NSString stringWithFormat:@"%@/%@.app", dirName, [thePath lastPathComponent]] );
+                    }
+            }
+            else{
+                success = YES;
+                updateDropletIcon( thePath, [NSString stringWithFormat:@"%@/%@.app", dirName, [thePath lastPathComponent]] );
+            }
+        }
+        if( alias ){
+            // clean up the temporary alias we created
+            unlink([alias fileSystemRepresentation]);
+        }
+    }
+    else{
+        NSLog( @"File %@ is unreachable: %@", thePath, err );
+    }
+    return success;
+}
+
 - (IBAction) doOpen: (id) aSender
 {
     NSOpenPanel* anOpenPanel = [NSOpenPanel openPanel];
@@ -230,44 +344,8 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
     [anOpenPanel setResolvesAliases: NO];
 
     if( [anOpenPanel runModal] == NSFileHandlingPanelOKButton ){
-        NSString *thePath = [[anOpenPanel URL] path], *dirName = [thePath stringByDeletingLastPathComponent];
-        NSError *err = nil;
-        int ret = 1;
-        if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
-            if( access( [dirName fileSystemRepresentation], W_OK ) == 0 ){
-                // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
-                ret = [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
-            }
-            else{
-                NSOpenPanel *destPanel = [NSOpenPanel openPanel];
-                [destPanel setCanChooseFiles: NO];
-                [destPanel setCanChooseDirectories: YES];
-                [destPanel setMessage:@"Choose a destination to save the new DropLet"];
-                if( [destPanel runModal] == NSFileHandlingPanelOKButton ){
-                    dirName = [[destPanel URL] path];
-                    // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
-                    ret = [self runScriptWithArguments:[NSArray arrayWithObjects:thePath, dirName, nil] wait:YES];
-                }
-            }
-            if( ret == 0 ){
-                if( isAlias(thePath) ){
-                    // we just received a Finder alias (bookmark). The python script that created our DropLet
-                    // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
-                    NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/drop_script",
-                                            dirName, [thePath lastPathComponent]];
-                        unlink([scriptFile fileSystemRepresentation]);
-                        if( ![[NSFileManager defaultManager] copyItemAtPath:thePath toPath:scriptFile error:&err] ){
-                            NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
-                                                thePath, scriptFile, err];
-                            PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
-                        }
-                }
-                updateDropletIcon( thePath, [NSString stringWithFormat:@"%@/%@.app", dirName, [thePath lastPathComponent]] );
-            }
+        if( [self createDropScriptWithFile:[[anOpenPanel URL] path]] ){
             [NSApp terminate: self];
-        }
-        else{
-            NSLog( @"File %@ is unreachable: %@", thePath, err );
         }
     }
 }
@@ -294,7 +372,14 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 
 - (void) _delayedOpenFile: (id) anObject
 {
-    [self runScriptWithArguments: myFilesToBatch];
+    if( creatingDropScript ){
+        for( NSString *thePath in myFilesToBatch ){
+            [self createDropScriptWithFile:thePath];
+        }
+    }
+    else{
+        [self runScriptWithArguments: myFilesToBatch];
+    }
     [myFilesToBatch release];
     myFilesToBatch = nil;
 
@@ -343,11 +428,24 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 }
 
 - (void) editScriptFile
-{ NSString *command = [NSString stringWithFormat:@"open -tW \"%@\"", myScriptFilename];
+{ NSString *command, *scriptFile;
+  NSURL *origURL = resolveIfAlias(myScriptFilename);
   NSError *err = nil;
-    system( [command fileSystemRepresentation] );
-    if( ![[NSURL fileURLWithPath:myScriptFilename] checkResourceIsReachableAndReturnError:&err] ){
-        NSLog( @"Warning: droplet file %@ has become unreachable: %@", myScriptFilename, err );
+    if( origURL ){
+        scriptFile = [origURL path];
+    }
+    else{
+        scriptFile = myScriptFilename;
+    }
+    if( isAppBundle(scriptFile) ){
+        PostMessageBox( [[scriptFile lastPathComponent] fileSystemRepresentation], "Editing of AppBundles is not supported" );
+    }
+    else{
+        command = [NSString stringWithFormat:@"open -tW \"%@\"", scriptFile];
+        system( [command fileSystemRepresentation] );
+    }
+    if( ![[NSURL fileURLWithPath:scriptFile] checkResourceIsReachableAndReturnError:&err] ){
+        NSLog( @"Warning: droplet file %@ has become unreachable: %@", scriptFile, err );
     }
 }
 
@@ -368,7 +466,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
         }
         else{
           NSUInteger mods = [NSEvent modifierFlags];
-            if( (mods & NSCommandKeyMask) ){
+            if( (mods & NSCommandKeyMask) && (mods & NSShiftKeyMask) ){
                 [self editScriptFile];
             }
             else{

@@ -7,11 +7,17 @@ The original behaviour of "droplets" created this way was to pass on the names o
 
 Modifications I made:
 
-- I added the possibility to launch the droplet without dropping any files onto it, in which case the script (or utility) is launched without arguments.
+- The source script can be a shell script proper, but also an executable, an alias or an application bundle
+
+- I added the possibility to launch the droplet without dropping any files onto it, in which case the script (or utility) is launched without arguments. Creating droplets from Finder aliases is possible only by selection the source with a file dialog, not by drag-and-drop.
 
 - Launching the DropScript app itself without dropping a file onto it will open as a standard application. Use the Open menu item to select a script, binary executable or even a Finder alias to create a Droplet with. Use the New menu item to create and open a new file in the default text editor, allowing to create a script from scratch
 
-- Launching a droplet by command-double-clicking its icon will open the embedded script in the default text editor.
+- Launching a droplet by command+shift-double-clicking its icon will open the embedded script in the default text editor, unless the script points to an app bundle.
+
+- If the script resides on a read-only filesystem (say a disk image), DropScript will ask for a destination to save the droplet.
+
+- Droplets created from an application bundle will contain a Finder alias to that application, instead of a copy of the application.
 
 - If the source executable/alias has an icon set, it's copied to the droplet instead of keeping the DropScript icon.
 
