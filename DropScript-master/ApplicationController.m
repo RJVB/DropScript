@@ -93,7 +93,7 @@ NSURL *resolveIfAlias( NSString *thePath )
         NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:[NSURL fileURLWithPath:thePath] error:nil];
         err = nil;
         origURL = [NSURL URLByResolvingBookmarkData:bookmark
-                                            options:0
+                                            options:NSURLBookmarkResolutionWithoutUI
                                             relativeToURL:nil
                                             bookmarkDataIsStale:&isStale
                                             error:&err];
