@@ -86,20 +86,42 @@ BOOL createAliasFromTo( NSString *target, NSString *alias, NSError **err )
 }
 
 NSURL *resolveIfAlias( NSString *thePath )
-{ NSError *err;
+{ NSError *err = nil;
   BOOL isStale = NO;
   NSURL *origURL = nil;
     if( isAlias(thePath) ){
         NSData* bookmark = [NSURL bookmarkDataWithContentsOfURL:[NSURL fileURLWithPath:thePath] error:nil];
         err = nil;
+        // first try without attempting to mount anything:
         origURL = [NSURL URLByResolvingBookmarkData:bookmark
-                                            options:NSURLBookmarkResolutionWithoutUI
+                                            options:NSURLBookmarkResolutionWithoutUI|NSURLBookmarkResolutionWithoutMounting
                                             relativeToURL:nil
                                             bookmarkDataIsStale:&isStale
                                             error:&err];
-        if( isStale || err ){
-            NSLog( @"alias resolution: isStale=%d, err=%@", isStale, err );
-            NSLog( @"%@ points to %@; using the destination", thePath, origURL );
+        if( !origURL ){
+            // no luck, let's try again. This will probably cause a Finder window to be opened if the target is on
+            // a volume that gets mounted
+            err = nil;
+            origURL = [NSURL URLByResolvingBookmarkData:bookmark
+                                                options:0
+                                                relativeToURL:nil
+                                                bookmarkDataIsStale:&isStale
+                                                error:&err];
+            if( isStale || err ){
+                NSLog( @"alias resolution: isStale=%d, err=%@", isStale, err );
+                NSLog( @"%@ points to %@; using the destination", thePath, origURL );
+            }
+            else{
+              NSArray *path = [[origURL path] pathComponents];
+                // Tell the Finder to close the window corresponding to a volume just mounted
+                if( ([(NSString*)[path objectAtIndex:0] compare:@"/"] == NSOrderedSame)
+                   && ([(NSString*)[path objectAtIndex:1] compare:@"Volumes"] == NSOrderedSame)
+                ){
+                  NSString *osa = [NSString stringWithFormat:@"osascript -e 'tell application \"Finder\" to close window \"/%@/%@\"'",
+                                   [path objectAtIndex:1], [path objectAtIndex:2]];
+                    system( [osa fileSystemRepresentation] );
+                }
+            }
         }
     }
     return origURL;
@@ -119,7 +141,10 @@ BOOL isAppBundle(NSString *thePath)
 }
 
 BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
-{ NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:thePath];
+{ NSURL *origURL = resolveIfAlias(thePath);
+  // get the icon for the original if thePath is an alias, for otherwise the result would have the alias arrow embedded
+  // and we're not creating a Finder alias or symlink, but an application bundle.
+  NSImage *icon = [[NSWorkspace sharedWorkspace] iconForFile:((origURL)?[origURL path] : thePath) ];
     if( icon ){
         if( !appBndl ){
             appBndl = [NSString stringWithFormat:@"%@.app", thePath];

@@ -6,6 +6,21 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		D620B5C9194A6F9A002AB1F4 /* Examples */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = D620B5D1194A6FD0002AB1F4 /* Build configuration list for PBXAggregateTarget "Examples" */;
+			buildPhases = (
+				D620B5C8194A6F9A002AB1F4 /* ShellScript */,
+			);
+			dependencies = (
+				D620B5CE194A6FA1002AB1F4 /* PBXTargetDependency */,
+			);
+			name = Examples;
+			productName = Examples;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		352790FE07EE507C00201C3A /* terminal in Resources */ = {isa = PBXBuildFile; fileRef = 352790FD07EE507C00201C3A /* terminal */; };
 		35E533630645C9E4001AFFF1 /* Credits.rtf in Resources */ = {isa = PBXBuildFile; fileRef = 35E533610645C9E4001AFFF1 /* Credits.rtf */; };
@@ -20,7 +35,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		D64D3F0B192BC7BC002AB1F4 /* PBXContainerItemProxy */ = {
+		D620B5CD194A6FA1002AB1F4 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 29B97313FDCFA39411CA2CEA /* Project object */;
 			proxyType = 1;
@@ -52,7 +67,6 @@
 		35E5377C0646187D001AFFF1 /* drop_script.py */ = {isa = PBXFileReference; fileEncoding = 4; indentWidth = 4; lastKnownFileType = text.script.python; path = drop_script.py; sourceTree = "<group>"; tabWidth = 4; usesTabs = 0; };
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* DropScript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropScript.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		D64D3F08192BC770002AB1F4 /* DropScript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropScript.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D64D3F0A192BC770002AB1F4 /* Info copy.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info copy.plist"; sourceTree = "<group>"; };
 		D692E07119324FA7002AB1F4 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README; path = ../README; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -82,7 +96,6 @@
 				8D1107320486CEB800E47090 /* DropScript.app */,
 				350CB6ED07EEC1670009953A /* Drop Applications */,
 				350CB71207EEC1670009953A /* Example Scripts */,
-				D64D3F08192BC770002AB1F4 /* DropScript.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -183,23 +196,6 @@
 			productReference = 8D1107320486CEB800E47090 /* DropScript.app */;
 			productType = "com.apple.product-type.application";
 		};
-		D64D3EF4192BC770002AB1F4 /* examples */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = D64D3F04192BC770002AB1F4 /* Build configuration list for PBXNativeTarget "examples" */;
-			buildPhases = (
-				D64D3F03192BC770002AB1F4 /* ShellScript */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-				D64D3F0C192BC7BC002AB1F4 /* PBXTargetDependency */,
-			);
-			name = examples;
-			productInstallPath = "$(HOME)/Applications";
-			productName = DropScript;
-			productReference = D64D3F08192BC770002AB1F4 /* DropScript.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -217,7 +213,7 @@
 			projectRoot = "";
 			targets = (
 				8D1107260486CEB800E47090 /* DropScript */,
-				D64D3EF4192BC770002AB1F4 /* examples */,
+				D620B5C9194A6F9A002AB1F4 /* Examples */,
 			);
 		};
 /* End PBXProject section */
@@ -239,9 +235,9 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		D64D3F03192BC770002AB1F4 /* ShellScript */ = {
+		D620B5C8194A6F9A002AB1F4 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 12;
+			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
@@ -251,6 +247,7 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "make -C examples \"${ACTION}\"\n";
+			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -267,10 +264,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		D64D3F0C192BC7BC002AB1F4 /* PBXTargetDependency */ = {
+		D620B5CE194A6FA1002AB1F4 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 8D1107260486CEB800E47090 /* DropScript */;
-			targetProxy = D64D3F0B192BC7BC002AB1F4 /* PBXContainerItemProxy */;
+			targetProxy = D620B5CD194A6FA1002AB1F4 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -382,61 +379,31 @@
 			};
 			name = Default;
 		};
-		D64D3F05192BC770002AB1F4 /* Development */ = {
+		D620B5CA194A6F9A002AB1F4 /* Development */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
-				DEBUGGING_SYMBOLS = YES;
 				GCC_DYNAMIC_NO_PIC = NO;
-				GCC_ENABLE_FIX_AND_CONTINUE = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				INFOPLIST_FILE = "Info copy.plist";
-				INSTALL_PATH = /Applications/DropScript;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = DropScript;
-				SDKROOT = "";
-				UNSTRIPPED_PRODUCT = YES;
-				WARNING_CFLAGS = "-Wall";
-				WRAPPER_EXTENSION = app;
-				ZERO_LINK = YES;
+				PRODUCT_NAME = Examples;
 			};
 			name = Development;
 		};
-		D64D3F06192BC770002AB1F4 /* Deployment */ = {
+		D620B5CB194A6F9A002AB1F4 /* Deployment */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				COPY_PHASE_STRIP = YES;
-				DEPLOYMENT_POSTPROCESSING = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				INFOPLIST_FILE = "Info copy.plist";
-				INSTALL_PATH = /Applications;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
-				ONLY_ACTIVE_ARCH = NO;
-				PRODUCT_NAME = DropScript;
-				SDKROOT = "";
-				WARNING_CFLAGS = "-Wall";
-				WRAPPER_EXTENSION = app;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				PRODUCT_NAME = Examples;
+				ZERO_LINK = NO;
 			};
 			name = Deployment;
 		};
-		D64D3F07192BC770002AB1F4 /* Default */ = {
+		D620B5CC194A6F9A002AB1F4 /* Default */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
-				INFOPLIST_FILE = "Info copy.plist";
-				INSTALL_PATH = /Applications/DropScript;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				ONLY_ACTIVE_ARCH = YES;
-				PRODUCT_NAME = DropScript;
-				WARNING_CFLAGS = "-Wall";
-				WRAPPER_EXTENSION = app;
+				PRODUCT_NAME = Examples;
 			};
 			name = Default;
 		};
@@ -463,12 +430,12 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
 		};
-		D64D3F04192BC770002AB1F4 /* Build configuration list for PBXNativeTarget "examples" */ = {
+		D620B5D1194A6FD0002AB1F4 /* Build configuration list for PBXAggregateTarget "Examples" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				D64D3F05192BC770002AB1F4 /* Development */,
-				D64D3F06192BC770002AB1F4 /* Deployment */,
-				D64D3F07192BC770002AB1F4 /* Default */,
+				D620B5CA194A6F9A002AB1F4 /* Development */,
+				D620B5CB194A6F9A002AB1F4 /* Deployment */,
+				D620B5CC194A6F9A002AB1F4 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
