@@ -32,6 +32,9 @@
 		8D11072B0486CEB800E47090 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C165CFE840E0CC02AAC07 /* InfoPlist.strings */; };
 		8D11072D0486CEB800E47090 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 29B97316FDCFA39411CA2CEA /* main.m */; settings = {ATTRIBUTES = (); }; };
 		8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7A1FEA54F0111CA2CBB /* Cocoa.framework */; };
+		D690A4C919670D5000D727C9 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D690A4C819670D5000D727C9 /* AppKit.framework */; };
+		D690A4CB19670D5000D727C9 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = D690A4CA19670D5000D727C9 /* Foundation.framework */; };
+		D690A4EA19670E5100D727C9 /* osxlaunch.m in Sources */ = {isa = PBXBuildFile; fileRef = D690A4E919670E5100D727C9 /* osxlaunch.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -68,6 +71,14 @@
 		8D1107310486CEB800E47090 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		8D1107320486CEB800E47090 /* DropScript.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DropScript.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		D64D3F0A192BC770002AB1F4 /* Info copy.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info copy.plist"; sourceTree = "<group>"; };
+		D690A4C319670D3F00D727C9 /* osxlaunch */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = osxlaunch; sourceTree = BUILT_PRODUCTS_DIR; };
+		D690A4C819670D5000D727C9 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		D690A4CA19670D5000D727C9 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		D690A4D119670D6A00D727C9 /* osxlaunch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = osxlaunch.m; path = ../../../new/KDE/osxlaunch.m; sourceTree = SOURCE_ROOT; };
+		D690A4E919670E5100D727C9 /* osxlaunch.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = osxlaunch.m; path = ../osxlaunch.m; sourceTree = SOURCE_ROOT; };
+		D690A5731967200600D727C9 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		D690A5791967202000D727C9 /* CoreServices.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreServices.framework; path = System/Library/Frameworks/CoreServices.framework; sourceTree = SDKROOT; };
+		D690A5811967212500D727C9 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		D692E07119324FA7002AB1F4 /* README */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = README; path = ../README; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -77,6 +88,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				8D11072F0486CEB800E47090 /* Cocoa.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D690A4C119670D3F00D727C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D690A4C919670D5000D727C9 /* AppKit.framework in Frameworks */,
+				D690A4CB19670D5000D727C9 /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -96,6 +116,7 @@
 				8D1107320486CEB800E47090 /* DropScript.app */,
 				350CB6ED07EEC1670009953A /* Drop Applications */,
 				350CB71207EEC1670009953A /* Example Scripts */,
+				D690A4C319670D3F00D727C9 /* osxlaunch */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -103,6 +124,8 @@
 		29B97314FDCFA39411CA2CEA /* DropScript */ = {
 			isa = PBXGroup;
 			children = (
+				D690A4E919670E5100D727C9 /* osxlaunch.m */,
+				D690A4D119670D6A00D727C9 /* osxlaunch.m */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -110,6 +133,11 @@
 				29B97323FDCFA39411CA2CEA /* Frameworks */,
 				19C28FACFE9D520D11CA2CBB /* Products */,
 				D692E07119324FA7002AB1F4 /* README */,
+				D690A4C819670D5000D727C9 /* AppKit.framework */,
+				D690A4CA19670D5000D727C9 /* Foundation.framework */,
+				D690A5731967200600D727C9 /* CoreFoundation.framework */,
+				D690A5791967202000D727C9 /* CoreServices.framework */,
+				D690A5811967212500D727C9 /* Cocoa.framework */,
 			);
 			name = DropScript;
 			sourceTree = "<group>";
@@ -196,6 +224,22 @@
 			productReference = 8D1107320486CEB800E47090 /* DropScript.app */;
 			productType = "com.apple.product-type.application";
 		};
+		D690A4C219670D3F00D727C9 /* osxlaunch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = D690A4D019670D5000D727C9 /* Build configuration list for PBXNativeTarget "osxlaunch" */;
+			buildPhases = (
+				D690A4C019670D3F00D727C9 /* Sources */,
+				D690A4C119670D3F00D727C9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = osxlaunch;
+			productName = osxlaunch;
+			productReference = D690A4C319670D3F00D727C9 /* osxlaunch */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -214,6 +258,7 @@
 			targets = (
 				8D1107260486CEB800E47090 /* DropScript */,
 				D620B5C9194A6F9A002AB1F4 /* Examples */,
+				D690A4C219670D3F00D727C9 /* osxlaunch */,
 			);
 		};
 /* End PBXProject section */
@@ -258,6 +303,14 @@
 			files = (
 				8D11072D0486CEB800E47090 /* main.m in Sources */,
 				35E5339D0645CC88001AFFF1 /* ApplicationController.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D690A4C019670D3F00D727C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D690A4EA19670E5100D727C9 /* osxlaunch.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -326,11 +379,14 @@
 				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				COPY_PHASE_STRIP = NO;
 				DEBUGGING_SYMBOLS = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = org.macports.clang.3.4;
+				IBC_STRIP_NIBS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /Applications/DropScript;
 				MACOSX_DEPLOYMENT_TARGET = "";
@@ -349,9 +405,11 @@
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				COPY_PHASE_STRIP = NO;
-				DEPLOYMENT_POSTPROCESSING = YES;
+				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = YES;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = org.macports.clang.3.4;
+				IBC_STRIP_NIBS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /Applications;
 				MACOSX_DEPLOYMENT_TARGET = "";
@@ -367,8 +425,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COPY_PHASE_STRIP = NO;
+				DEPLOYMENT_POSTPROCESSING = NO;
 				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
 				GCC_TREAT_WARNINGS_AS_ERRORS = NO;
+				GCC_VERSION = org.macports.clang.3.4;
+				IBC_STRIP_NIBS = NO;
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = /Applications/DropScript;
 				MACOSX_DEPLOYMENT_TARGET = "";
@@ -407,6 +468,63 @@
 			};
 			name = Default;
 		};
+		D690A4C519670D4000D727C9 /* Development */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COPY_PHASE_STRIP = NO;
+				GCC_DYNAMIC_NO_PIC = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_THUMB_SUPPORT = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.3.0;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = osxlaunch;
+			};
+			name = Development;
+		};
+		D690A4C619670D4000D727C9 /* Deployment */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_DYNAMIC_NO_PIC = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_THUMB_SUPPORT = NO;
+				GCC_VERSION = org.macports.clang.3.4;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = osxlaunch;
+				SDKROOT = macosx10.6;
+				ZERO_LINK = NO;
+			};
+			name = Deployment;
+		};
+		D690A4C719670D4000D727C9 /* Default */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
+				GCC_DYNAMIC_NO_PIC = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_ENABLE_SSE3_EXTENSIONS = YES;
+				GCC_MODEL_TUNING = "";
+				GCC_THUMB_SUPPORT = NO;
+				GCC_VERSION = com.apple.compilers.llvm.clang.3.0;
+				INSTALL_PATH = /usr/local/bin;
+				PREBINDING = NO;
+				PRODUCT_NAME = osxlaunch;
+			};
+			name = Default;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -436,6 +554,16 @@
 				D620B5CA194A6F9A002AB1F4 /* Development */,
 				D620B5CB194A6F9A002AB1F4 /* Deployment */,
 				D620B5CC194A6F9A002AB1F4 /* Default */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Default;
+		};
+		D690A4D019670D5000D727C9 /* Build configuration list for PBXNativeTarget "osxlaunch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D690A4C519670D4000D727C9 /* Development */,
+				D690A4C619670D4000D727C9 /* Deployment */,
+				D690A4C719670D4000D727C9 /* Default */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Default;
