@@ -53,7 +53,8 @@ droplet_contents   = os.path.join(droplet_path, "Contents")
 droplet_bindir     = os.path.join(droplet_contents, "MacOS")
 droplet_executable = os.path.join(droplet_bindir, droplet_name)
 droplet_resources  = os.path.join(droplet_contents, "Resources")
-droplet_script     = os.path.join(droplet_resources, "drop_script")
+#droplet_script     = os.path.join(droplet_resources, "drop_script")
+droplet_script     = os.path.join(droplet_resources, base_name)
 droplet_plist      = os.path.join(droplet_contents, "Info.plist")
 
 i = 0
@@ -183,6 +184,8 @@ def write_plist(plist_filename, options):
     <string>""" + droplet_name + """</string>
     <key>CFBundleIconFile</key>
     <string>DropScript.icns</string>
+    <key>CFBundleName</key>
+    <string>""" + droplet_name + """</string>
     <key>CFBundleIdentifier</key>
     <string>net.wsanchez.DropScript.""" + droplet_name + """</string>
     <key>CFBundleInfoDictionaryVersion</key>
@@ -257,6 +260,10 @@ try:
         pass
     try:
         os.remove(droplet_script+".py")
+    except:
+        pass
+    try:
+        os.remove(os.path.join(droplet_resources, "drop_script.py"))
     except:
         pass
     if debug: print "Copying %s to %s..." % (new_script, droplet_script)

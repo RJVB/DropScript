@@ -10,6 +10,7 @@
 #import <Cocoa/Cocoa.h>
 
 #import "ApplicationController.h"
+#import <crt_externs.h>
 #include <unistd.h>
 
 int PostMessageBox( const char *title, const char *message )
@@ -163,11 +164,15 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 
 - (id) init
 {
-    if ((self = [super init]))
-    {
+    if( (self = [super init]) ){
+      char **argv = *_NSGetArgv();
         myAppIsLaunching             = YES;
         myAppWasLaunchedWithDocument = NO;
-        myScriptFilename             = [[[NSBundle mainBundle] pathForResource:@"drop_script" ofType:nil] retain];
+//         NSLog( @"Application name is \"%@\"", [[NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding] lastPathComponent] );
+//         myScriptFilename             = [[[NSBundle mainBundle] pathForResource:@"drop_script" ofType:nil] retain];
+        myScriptFilename             = [[[NSBundle mainBundle]
+                                         pathForResource:[[NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding] lastPathComponent]
+                                         ofType:nil] retain];
 
         if( !myScriptFilename ){
             if( (myScriptFilename = [[[NSBundle mainBundle] pathForResource:@"drop_script.py" ofType:nil] retain]) ){
@@ -322,8 +327,10 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
             if( isAlias(thePath) ){
                 // we just received a Finder alias (bookmark). The python script that created our DropLet
                 // doesn't handle those correctly (on all OS X versions), so we take corrective action here.
-                NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/drop_script",
-                                        dirName, [thePath lastPathComponent]];
+//                 NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/drop_script",
+//                                         dirName, [thePath lastPathComponent]];
+                NSString *scriptFile = [NSString stringWithFormat:@"%@/%@.app/Contents/Resources/%@",
+                                        dirName, [thePath lastPathComponent], [thePath lastPathComponent]];
                 BOOL ok;
                     unlink([scriptFile fileSystemRepresentation]);
                     if( alias ){

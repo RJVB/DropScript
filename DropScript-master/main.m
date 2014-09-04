@@ -10,5 +10,6 @@
 
 int main(int anArgumentCount, const char *theArguments[])
 {
+//     NSLog( @"Application name is \"%s\"", theArguments[0] );
     return NSApplicationMain(anArgumentCount, theArguments);
 }
