@@ -23,6 +23,11 @@ Modifications I made:
 
 - I modified the Xcode project for building on 10.6 and higher; there's also an Xcode project for 10.9 and higher
 
+September 2014:
+- The internal copy of the script or binary executable (payload) will now have the same name as the original (instead of being renamed to "drop_script"), ensuring that the command will be seen under the expected name in the task switcher when running.
+
+- I've added a switch in the Info.plist (WrapperClosesStdIO) that, when set, will cause DropScript to close stdin, stdout and stderr before launching the payload. This is to prevent particularly chatty applications from polluting the (console) logs.
+
 
 Source:
 http://head-lights.blogspot.fr/2013/05/dropscript-for-mac-os-x-108-mountain.html

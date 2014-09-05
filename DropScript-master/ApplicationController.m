@@ -11,6 +11,7 @@
 
 #import "ApplicationController.h"
 #import <crt_externs.h>
+#include <stdio.h>
 #include <unistd.h>
 
 int PostMessageBox( const char *title, const char *message )
@@ -215,10 +216,18 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 { NSString *scriptFile = myScriptFilename;
   BOOL isAppBndle = NO;
   NSURL *origURL;
+  id closeIO = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"WrapperClosesStdIO"];
+  BOOL detach;
     if( (origURL = resolveIfAlias(myScriptFilename)) ){
         scriptFile = [origURL path];
     }
     isAppBndle = isAppBundle(scriptFile);
+    if( closeIO && [closeIO isKindOfClass:[NSNumber class]] ){
+        if( (detach = [((NSNumber*)closeIO) boolValue]) ){
+            NSLog( @"Info.plist::WrapperClosesStdIO=%@ - will close stdin, stdout and stderr",
+                  closeIO );
+        }
+    }
     if( theArguments == nil ){
         if( isAppBndle ){
             [[NSWorkspace sharedWorkspace] launchApplication:scriptFile];
@@ -227,6 +236,9 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
             // RJVB 20140520
             NSTask *aTask = [[NSTask alloc] init];
             [aTask setLaunchPath:scriptFile];
+            if( detach ){
+                fclose(stdin), fclose(stdout), fclose(stderr);
+            }
             [aTask launch];
             return aTask;
         }
@@ -241,6 +253,9 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
             }
         }
         else{
+            if( detach ){
+                fclose(stdin), fclose(stdout), fclose(stderr);
+            }
             return [NSTask launchedTaskWithLaunchPath:scriptFile
                                      arguments:theArguments];
         }
