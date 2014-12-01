@@ -26,7 +26,7 @@ source_script = sys.argv[0]
 
 import Tkinter, tkMessageBox
 
-if len(sys.argv) < 2 or len(sys.argv) > 3:
+if len(sys.argv) < 2 or len(sys.argv) > 4:
     try:
         import Tkinter, tkMessageBox
         top = Tkinter.Tk()
@@ -41,10 +41,14 @@ new_script  = sys.argv[1]
 
 source_app         = os.path.dirname(os.path.dirname(os.path.dirname(source_script)))
 source_name        = os.path.splitext(os.path.basename(source_app))[0]
-if len(sys.argv) == 3:
+if (len(sys.argv) >= 3) and (len(sys.argv[2]) > 0):
     destination    = sys.argv[2]
 else:
     destination    = os.path.dirname(new_script)
+if len(sys.argv) >= 4:
+    iconName       = sys.argv[3]
+else:
+    iconName       = "DropScript.icns"
 base_name          = os.path.basename(os.path.splitext(new_script)[0])
 # droplet_name       = "Drop" + base_name
 droplet_name       = base_name
@@ -185,7 +189,7 @@ def write_plist(plist_filename, options):
     <key>CFBundleExecutable</key>
     <string>""" + droplet_name + """</string>
     <key>CFBundleIconFile</key>
-    <string>DropScript.icns</string>
+    <string>""" + iconName + """</string>
     <key>CFBundleName</key>
     <string>""" + droplet_name + """</string>
     <key>CFBundleIdentifier</key>

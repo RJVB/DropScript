@@ -21,7 +21,7 @@
     BOOL            myAppIsLaunching;
     BOOL            myAppWasLaunchedWithDocument;
     BOOL            creatingDropScript;
-    NSString*       myScriptFilename;
+    NSString        *myScriptFilename, *appName;
     NSMutableArray* myFilesToBatch;
 }
 

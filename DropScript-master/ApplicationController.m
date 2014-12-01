@@ -14,33 +14,30 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int PostMessageBox( const char *title, const char *message )
+int PostMessageBox( NSString *title, const char *message )
 { NSAlert* alert = [[[NSAlert alloc] init] autorelease];
-    NSString *msg, *tit;
+    NSString *msg;
 	@synchronized([NSAlert class]){
 		[alert setAlertStyle:NSInformationalAlertStyle];
 		[alert setMessageText:@"" ];
 		if( !(msg = [NSString stringWithCString:message encoding:NSUTF8StringEncoding]) ){
 			msg = [NSString stringWithCString:message encoding:NSASCIIStringEncoding];
 		}
-		if( !(tit = [NSString stringWithCString:title encoding:NSUTF8StringEncoding]) ){
-			tit = [NSString stringWithCString:title encoding:NSASCIIStringEncoding];
-		}
 		if( msg ){
 			[alert setInformativeText:msg];
 		}
 		else{
-			NSLog( @"msg=%@ tit=%@", msg, tit );
+			NSLog( @"msg=%@ title=%@", msg, title );
 		}
-		[[alert window] setTitle:tit];
+		[[alert window] setTitle:title];
 		return NSAlertDefaultReturn == [alert runModal];
 	}
 	return 0;
 }
 
-int PostSelectionBox( const char *title, const char *message )
+int PostSelectionBox( NSString *title, const char *message )
 { NSAlert* alert = [NSAlert
-			alertWithMessageText:[NSString stringWithCString:title encoding:NSUTF8StringEncoding]
+			alertWithMessageText:title
 			defaultButton:@"OK" alternateButton:@"New script" otherButton:@"Open existing"
 			informativeTextWithFormat:[NSString stringWithCString:message encoding:NSUTF8StringEncoding]
 		];
@@ -142,6 +139,10 @@ BOOL isAppBundle(NSString *thePath)
     return ret;
 }
 
+// updateDropletIcon copies the icon used by the file at <thePath> to the specified <appBndl>
+// appBndl will be a bundle created by us, so it already has a bundle icon specified in the Info.plist
+// The call to setIcon: below will override that setting ... until the user deletes the icon, in which
+// case our internal icon will be shown again.
 BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 { NSURL *origURL = resolveIfAlias(thePath);
   // get the icon for the original if thePath is an alias, for otherwise the result would have the alias arrow embedded
@@ -188,6 +189,15 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
             creatingDropScript = NO;
         }
 
+        id cfBundleName = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"CFBundleName"];
+        if( cfBundleName && [cfBundleName isKindOfClass:[NSString class]] ){
+            appName = [(NSString*) cfBundleName retain];
+//             NSLog( @"appName from CFBundleName=%@", appName );
+        }
+        else{
+            appName = [[[NSString stringWithCString:argv[0] encoding:NSUTF8StringEncoding] lastPathComponent] retain];
+//             NSLog( @"appName from argv=%@", appName );
+        }
         // Provide application services
         // From http://stackoverflow.com/questions/49510/how-do-you-set-your-cocoa-application-as-the-default-web-browser
         [NSApp setServicesProvider: self];
@@ -204,6 +214,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 - (void) dealloc
 {
     [myScriptFilename release];
+    [appName release];
 
     [super dealloc];
 }
@@ -217,7 +228,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
   BOOL isAppBndle = NO;
   NSURL *origURL;
   id closeIO = [[[NSBundle mainBundle] infoDictionary] objectForKey:@"WrapperClosesStdIO"];
-  BOOL detach;
+  BOOL detach = false;
     if( (origURL = resolveIfAlias(myScriptFilename)) ){
         scriptFile = [origURL path];
     }
@@ -240,6 +251,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
                 fclose(stdin), fclose(stdout), fclose(stderr);
             }
             [aTask launch];
+            [aTask release];
             return aTask;
         }
     }
@@ -266,11 +278,15 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 }
 
 - (int) runScriptWithArguments: (NSArray*) theArguments wait:(BOOL)wait
-{ NSTask *script = [self runScriptWithArguments:theArguments];
+{ NSTask *script = [[self runScriptWithArguments:theArguments] retain];
   int ret = 0;
     if( wait ){
         [script waitUntilExit];
         ret = [script terminationStatus];
+        [script release];
+    }
+    else{
+        [script autorelease];
     }
     return ret;
 }
@@ -288,6 +304,49 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
     }
 }
 
+NSArray *createArgList( NSString *fName, NSString *dirName )
+{ NSMutableArray *array = [NSMutableArray arrayWithObject:fName];
+    if( dirName ){
+        [array addObject:dirName];
+    }
+#ifdef APPDROP2BUNDLE
+    else{
+        [array addObject:@""];
+    }
+    [array addObject:@"AppDrop2Bundle.icns"];
+#endif
+    return array;
+}
+
+- (NSString*) createDropScriptNow:(NSString*)thePath dirName:(NSString*)dirName retCode:(int*)ret
+{ NSString *alias;
+  NSError *err = nil;
+    // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+    if( isAppBundle(thePath) ){
+        if( dirName ){
+            alias = [NSString stringWithFormat:@"%@/%@", dirName,
+                     [[thePath stringByDeletingPathExtension] lastPathComponent]];
+        }
+        else{
+            alias = [NSString stringWithFormat:@"%@-DropLet", [thePath stringByDeletingPathExtension]];
+        }
+        if( createAliasFromTo( thePath, alias, &err ) ){
+            // we can just call runScriptWithArguments with a single argument, as the droplet
+            // is to be created in the same directory as the alias we just made.
+            *ret = [self runScriptWithArguments:[NSArray arrayWithObject:alias] wait:YES];
+            thePath = alias;
+        }
+        else{
+            NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
+            PostMessageBox( appName, "Source script is an AppBundle and cannot make an alias to it" );
+        }
+    }
+    else{
+        *ret = [self runScriptWithArguments:createArgList(thePath, dirName) wait:YES];
+    }
+    return thePath;
+}
+
 - (BOOL) createDropScriptWithFile:(NSString*) thePath
 { NSString *dirName = [thePath stringByDeletingLastPathComponent], *alias = NULL;
   NSError *err = nil;
@@ -295,21 +354,22 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
   BOOL success = NO;
     if( [[NSURL fileURLWithPath:thePath] checkResourceIsReachableAndReturnError:&err] ){
         if( access( [dirName fileSystemRepresentation], W_OK ) == 0 ){
-            // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
-            if( isAppBundle(thePath) ){
-                alias = [NSString stringWithFormat:@"%@-DropLet", [thePath stringByDeletingPathExtension]];
-                if( createAliasFromTo( thePath, alias, &err ) ){
-                    ret = [self runScriptWithArguments:[NSArray arrayWithObject:alias] wait:YES];
-                    thePath = alias;
-                }
-                else{
-                    NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
-                    PostMessageBox( "DropScript", "Source script is an AppBundle and cannot make an alias to it" );
-                }
-            }
-            else{
-                ret = [self runScriptWithArguments:[NSArray arrayWithObject:thePath] wait:YES];
-            }
+            thePath = [self createDropScriptNow:thePath dirName:NULL retCode:&ret];
+//             // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
+//             if( isAppBundle(thePath) ){
+//                 alias = [NSString stringWithFormat:@"%@-DropLet", [thePath stringByDeletingPathExtension]];
+//                 if( createAliasFromTo( thePath, alias, &err ) ){
+//                     ret = [self runScriptWithArguments:createArgList(alias, NULL) wait:YES];
+//                     thePath = alias;
+//                 }
+//                 else{
+//                     NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
+//                     PostMessageBox( appName, "Source script is an AppBundle and cannot make an alias to it" );
+//                 }
+//             }
+//             else{
+//                 ret = [self runScriptWithArguments:createArgList(thePath, NULL) wait:YES];
+//             }
         }
         else{
             NSOpenPanel *destPanel = [NSOpenPanel openPanel];
@@ -318,24 +378,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
             [destPanel setMessage:@"Choose a destination to save the new DropLet"];
             if( [destPanel runModal] == NSFileHandlingPanelOKButton ){
                 dirName = [[destPanel URL] path];
-                // check here if thePath is an appbundle, and if so, create an alias to it in dirName and update thePath accordingly.
-                if( isAppBundle(thePath) ){
-                    alias = [NSString stringWithFormat:@"%@/%@", dirName,
-                             [[thePath stringByDeletingPathExtension] lastPathComponent]];
-                    if( createAliasFromTo( thePath, alias, &err ) ){
-                        // we can just call runScriptWithArguments with a single argument, as the droplet
-                        // is to be created in the same directory as the alias we just made.
-                        ret = [self runScriptWithArguments:[NSArray arrayWithObject:alias] wait:YES];
-                        thePath = alias;
-                    }
-                    else{
-                        NSLog( @"%@ is an AppBundle and cannot make alias \"%@\" to it (%@)", thePath, alias, err );
-                        PostMessageBox( "DropScript", "Source script is an AppBundle and cannot make an alias to it" );
-                    }
-                }
-                else{
-                    ret = [self runScriptWithArguments:[NSArray arrayWithObjects:thePath, dirName, nil] wait:YES];
-                }
+                thePath = [self createDropScriptNow:thePath dirName:dirName retCode:&ret];
             }
         }
         if( ret == 0 ){
@@ -358,7 +401,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
                     if( !ok ){
                         NSString *errMsg = [NSString stringWithFormat:@"An error occurred copying the alias %@ to %@ (%@)",
                                             thePath, scriptFile, err];
-                        PostMessageBox( "DropScript", [errMsg fileSystemRepresentation] );
+                        PostMessageBox( appName, [errMsg fileSystemRepresentation] );
                     }
                     else{
                         success = YES;
@@ -425,7 +468,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
         }
     }
     else{
-        [self runScriptWithArguments: myFilesToBatch];
+        [self runScriptWithArguments: myFilesToBatch wait:NO];
     }
     [myFilesToBatch release];
     myFilesToBatch = nil;
@@ -485,7 +528,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
         scriptFile = myScriptFilename;
     }
     if( isAppBundle(scriptFile) ){
-        PostMessageBox( [[scriptFile lastPathComponent] fileSystemRepresentation], "Editing of AppBundles is not supported" );
+        PostMessageBox( [scriptFile lastPathComponent], "Editing of AppBundles is not supported" );
     }
     else{
         command = [NSString stringWithFormat:@"open -tW \"%@\"", scriptFile];
@@ -502,7 +545,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
     if( myScriptFilename && !myAppWasLaunchedWithDocument ){
         // RJVB 20140520
         if( creatingDropScript ){
-            switch( PostSelectionBox( "DropScript", "Use the File menu either to create a New script or else to Open an existing executable" ) ){
+            switch( PostSelectionBox( appName, "Use the File menu either to create a New script or else to Open an existing executable" ) ){
                 case 2:
                     [self doNew:self];
                     break;
@@ -517,7 +560,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
                 [self editScriptFile];
             }
             else{
-                [self runScriptWithArguments:nil];
+                [self runScriptWithArguments:nil wait:NO];
             }
             [NSApp terminate: self];
         }
@@ -539,7 +582,7 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
     if ([aTypes containsObject: NSFilenamesPboardType] &&
         (aData = [aPasteBoard propertyListForType: NSFilenamesPboardType]))
     {
-        [self runScriptWithArguments: aData];
+        [self runScriptWithArguments: aData wait:NO];
     }
     else
     {
@@ -553,9 +596,9 @@ BOOL updateDropletIcon( NSString *thePath, NSString *appBndl )
 {
     NSString *urlStr = [[event paramDescriptorForKeyword:keyDirectObject]
                         stringValue];
-    NSMutableArray *urls = [[NSMutableArray alloc] init];
-    [urls addObject: urlStr];
-    [self runScriptWithArguments: urls];
+    NSMutableArray *urls = [[[NSMutableArray alloc] init] autorelease];
+    [urls addObject:urlStr];
+    [self runScriptWithArguments: urls wait:NO];
 }
 
 @end
